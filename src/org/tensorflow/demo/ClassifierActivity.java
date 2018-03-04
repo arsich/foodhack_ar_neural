@@ -28,6 +28,9 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Surface;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
 import java.util.List;
 import java.util.Vector;
 import org.tensorflow.demo.OverlayView.DrawCallback;
@@ -65,16 +68,21 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   // --input_node_names="Mul" \
   // --output_node_names="final_result" \
   // --input_binary=true
-  private static final int INPUT_SIZE = 224;
-  private static final int IMAGE_MEAN = 117;
-  private static final float IMAGE_STD = 1;
-  private static final String INPUT_NAME = "input";
-  private static final String OUTPUT_NAME = "output";
+//  private static final int INPUT_SIZE = 224;
+//  private static final int IMAGE_MEAN = 117;
+//  private static final float IMAGE_STD = 1;
+//  private static final String INPUT_NAME = "input";
+//  private static final String OUTPUT_NAME = "output";
+  private static final int INPUT_SIZE = 299;
+  private static final int IMAGE_MEAN = 128;
+  private static final float IMAGE_STD = 128;
+  private static final String INPUT_NAME = "Mul";
+  private static final String OUTPUT_NAME = "final_result";
 
 
-  private static final String MODEL_FILE = "file:///android_asset/tensorflow_inception_graph.pb";
+  private static final String MODEL_FILE = "file:///android_asset/retrained_graph_stripped_2.pb";
   private static final String LABEL_FILE =
-      "file:///android_asset/imagenet_comp_graph_label_strings.txt";
+      "file:///android_asset/retrained_labels_2.txt";
 
 
   private static final boolean MAINTAIN_ASPECT = true;
@@ -87,9 +95,12 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   private Matrix frameToCropTransform;
   private Matrix cropToFrameTransform;
 
+  FrameLayout labelContainer;
+  TextView labelText;
 
   private BorderedText borderedText;
 
+  private boolean hasShawarma;
 
   @Override
   protected int getLayoutId() {
@@ -139,6 +150,9 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
     cropToFrameTransform = new Matrix();
     frameToCropTransform.invert(cropToFrameTransform);
 
+    labelContainer = (FrameLayout) findViewById(R.id.label_container);
+    labelText = (TextView) findViewById(R.id.label_text);
+
     addCallback(
         new DrawCallback() {
           @Override
@@ -171,6 +185,18 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
               resultsView = (ResultsView) findViewById(R.id.results);
             }
             resultsView.setResults(results);
+
+            final boolean hasShawarmaLocal = checkHasShawarma(results);
+            if (hasShawarma != hasShawarmaLocal) {
+              hasShawarma = hasShawarmaLocal;
+              runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                  updateLabel(hasShawarma);
+                }
+              });
+            }
+
             requestRender();
             readyForNextImage();
           }
@@ -212,6 +238,26 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
       lines.add("Inference time: " + lastProcessingTimeMs + "ms");
 
       borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines);
+    }
+  }
+
+  private boolean checkHasShawarma(List<Classifier.Recognition> mappedRecognitions) {
+    //TODO change this method after pb will be ready
+    for (final Classifier.Recognition result : mappedRecognitions) {
+      if (result.getTitle().equals("shaverma") && result.getConfidence() > 0.4f) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private void updateLabel(boolean hasShawarma) {
+    if (hasShawarma) {
+      labelContainer.setBackgroundResource(R.color.green);
+      labelText.setText(getText(R.string.shawarma_is_here));
+    } else {
+      labelContainer.setBackgroundResource(R.color.gray);
+      labelText.setText(getText(R.string.no_shawarma));
     }
   }
 }

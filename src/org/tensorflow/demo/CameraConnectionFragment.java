@@ -53,6 +53,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -356,8 +357,7 @@ public class CameraConnectionFragment extends Fragment {
     DisplayMetrics metrics = new DisplayMetrics();
     getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
     int height = metrics.heightPixels - metrics.widthPixels * cameraWidth / cameraHeight;
-    FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
-    params.gravity = Gravity.BOTTOM;
+    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height);
     labelContainer.setLayoutParams(params);
   }
 
